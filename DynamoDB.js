@@ -1,3 +1,6 @@
+// DynamoDB.js
+// Find Getting Started AWS DynamoDB instructions at https://docs.aws.amazon.com/amazondynamodb/latest/gettingstartedguide/GettingStarted.Js.03.html
+
 const aws = require('aws-sdk')
 const chalk = require('chalk')
 
@@ -57,6 +60,54 @@ function awsDynamoUpdate(params, callback) {
   })
 }
 
+// Returns a formatted set of update parameters to input into awsDynamoUpdate such as...
+// const params = {
+//         TableName:'table',
+//         Key:{
+//             'year': year,
+//             'title': title
+//         },
+//         UpdateExpression: 'set info.rating = :r, info.plot=:p, info.actors=:a',
+//         ExpressionAttributeValues:{
+//             ':r':5.5,
+//             ':p':'Everything happens all at once.',
+//             ':a':['Larry', 'Moe', 'Curly']
+//         },
+//         ReturnValues:'UPDATED_NEW'
+//     }
+
+function setUpdateParams(tableName, itemKeyName, itemKeyValue, valueDict, returnValues) {
+
+  let updateExpression = 'set'
+  const updateValues = {}
+  const attributeNames = {}
+  let count = 0
+
+  for (const obj in valueDict) {
+
+    if (count === 0) {
+      updateExpression = updateExpression + ' #' + obj + ' = :' + obj
+    } else {
+      updateExpression = updateExpression + ', #' + obj + ' = :' + obj
+    }
+    updateValues[':' + obj] = valueDict[obj]
+    attributeNames['#' + obj] = obj
+    count += 1
+  }
+
+  const params = {}
+  params.TableName = tableName
+  params.Key = {}
+  params.Key[itemKeyName] = itemKeyValue
+  params.UpdateExpression = updateExpression
+  params.ExpressionAttributeValues = updateValues
+  params.ExpressionAttributeNames = attributeNames
+  params.ReturnValues = returnValues
+
+  return params
+
+}
+
 function awsDynamoQuery(params, callback) {
   const results = {}
   docClient.query(params, (err, data) => {
@@ -112,38 +163,6 @@ function awsDynamoDelete(params, callback) {
     return (callback && callback(results))
 
   })
-}
-
-function setUpdateParams(tableName, itemKeyName, itemKeyValue, valueDict, returnValues) {
-
-  let updateExpression = 'set'
-  const updateValues = {}
-  const attributeNames = {}
-  let count = 0
-
-  for (const obj in valueDict) {
-
-    if (count === 0) {
-      updateExpression = updateExpression + ' #' + obj + ' = :' + obj
-    } else {
-      updateExpression = updateExpression + ', #' + obj + ' = :' + obj
-    }
-    updateValues[':' + obj] = valueDict[obj]
-    attributeNames['#' + obj] = obj
-    count += 1
-  }
-
-  const params = {}
-  params.TableName = tableName
-  params.Key = {}
-  params.Key[itemKeyName] = itemKeyValue
-  params.UpdateExpression = updateExpression
-  params.ExpressionAttributeValues = updateValues
-  params.ExpressionAttributeNames = attributeNames
-  params.ReturnValues = returnValues
-
-  return params
-
 }
 
 function scanForNumberOfItemsInATable(tableName, callback) {
