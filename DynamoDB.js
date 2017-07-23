@@ -60,8 +60,9 @@ function awsDynamoUpdate(params, callback) {
   })
 }
 
-// Returns a formatted set of update parameters to input into awsDynamoUpdate such as...
-// const params = {
+// Returns a formatted set of update parameters to input into awsDynamoUpdate...
+// EXAMPLE RETURN VALUE:
+//    {
 //         TableName:'table',
 //         Key:{
 //             'year': year,
